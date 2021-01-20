@@ -17,4 +17,13 @@ describe('LocationsController', () => {
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
+
+  it('considering as search NOT return any value', async () => {
+
+    try{
+      await controller.findByFilter("");
+    } catch (error) {
+      expect(error.response).toStrictEqual("Incomplete location information");
+    }
+  });
 });
