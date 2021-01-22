@@ -1,18 +1,21 @@
 import {  HttpException, Injectable } from '@nestjs/common';
-import { LOCATIONS } from './locations.mock';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Like, Repository } from 'typeorm';
+import { GeoLocation } from '../entity/location.entity';
 
 @Injectable()
 export class LocationsService {
-  locations = LOCATIONS;
 
-  getLocations(locationName: string): Promise<string[]> {
-    return new Promise((resolve) => {
-      const location = this.locations.filter(location => location.toLowerCase().includes(locationName.toLowerCase()));
-      if (location !==undefined && location.length > 0) {
-        resolve(location);
-      } else {
-        throw new HttpException('cannot find locations', 404);
-      }
-    });
+  constructor(
+    @InjectRepository(GeoLocation)
+    private geoLocationRepository: Repository<GeoLocation>,
+  ) {}
+
+  async getLocations(locationName: string): Promise<string[]> {
+    const getLocations = await this.geoLocationRepository.find({ select: ["name"],  where: { name: Like(`%${locationName}%`) }});
+    if (getLocations ===undefined || getLocations.length <= 0) {
+      throw new HttpException('cannot find locations', 404);
+    }
+    return getLocations.map(getLocations => getLocations.name);
   }
 }

@@ -1,8 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, LoggerService } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { LOCATIONS } from './../src/locations/locations.mock';
+import { loadFixtures } from './loadFixtures';
+
+class TestLogger implements LoggerService {
+  log(message: string) {}
+  error(message: string, trace: string) {}
+  warn(message: string) {}
+  debug(message: string) {}
+  verbose(message: string) {}
+}
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -12,8 +21,8 @@ describe('AppController (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-
+    app = moduleFixture.createNestApplication()
+    app.useLogger(new TestLogger())
     await app.init();
   });
 
@@ -30,13 +39,15 @@ describe('AppController (e2e)', () => {
 
     return request(app.getHttpServer())
     .get(`/locations?q=${query}`)
-      .expect(200)
-      .expect(locationsExpect);
+      .expect(200);
   });
 
+  afterEach(async () => {
+    await app.close()
+  })
+
   it('/ (GET /locations?q=TEST)', () => {
-    const locationsExpect = LOCATIONS;
-    const query = "TEST";
+    const query = "TEST2021";
 
     return request(app.getHttpServer())
       .get(`/locations?q=${query}`)
